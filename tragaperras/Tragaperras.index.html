@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Tragaperras 5x3</title>
+<style>
+body{
+    background:#111827;
+    color:white;
+    font-family:Arial;
+    text-align:center;
+}
+.grid{
+    display:grid;
+    grid-template-columns: repeat(5,80px);
+    gap:10px;
+    justify-content:center;
+    margin:20px;
+}
+.slot{
+    background:white;
+    color:black;
+    font-size:40px;
+    height:80px;
+    line-height:80px;
+    border-radius:10px;
+}
+button,input{
+    padding:10px;
+    font-size:16px;
+    margin:5px;
+}
+</style>
+</head>
+<body>
+
+<h1>🎰 Tragaperras 5x3</h1>
+<h2 id="balance">Saldo: 500</h2>
+
+Apuesta: <input type="number" id="bet" value="10" min="1">
+<button onclick="spin()">Girar</button>
+
+<div class="grid" id="grid"></div>
+
+<h2 id="result"></h2>
+
+<script>
+
+const symbols = ["🍒","🍋","🍉","⭐","💎","7️⃣"];
+const payouts = {
+    "🍒":2,
+    "🍋":3,
+    "🍉":4,
+    "⭐":6,
+    "💎":10,
+    "7️⃣":20
+};
+
+let balance = 500;
+let grid = [];
+let spinning = false;
+
+function createGrid(){
+    const gridDiv = document.getElementById("grid");
+    gridDiv.innerHTML="";
+    grid=[];
+    for(let r=0;r<3;r++){
+        grid[r]=[];
+        for(let c=0;c<5;c++){
+            let div=document.createElement("div");
+            div.className="slot";
+            div.innerText="❓";
+            gridDiv.appendChild(div);
+            grid[r][c]=div;
+        }
+    }
+}
+
+function randomSymbol(){
+    return symbols[Math.floor(Math.random()*symbols.length)];
+}
+
+function spin(){
+
+    if(spinning) return;
+
+    let bet = parseInt(document.getElementById("bet").value);
+    if(bet <= 0 || bet > balance){
+        document.getElementById("result").innerText="Apuesta inválida";
+        return;
+    }
+
+    balance -= bet;
+    document.getElementById("balance").innerText="Saldo: "+balance;
+    document.getElementById("result").innerText="Girando...";
+    spinning = true;
+
+    let spins=15;
+    let interval=setInterval(()=>{
+
+        for(let r=0;r<3;r++){
+            for(let c=0;c<5;c++){
+                grid[r][c].innerText=randomSymbol();
+            }
+        }
+
+        spins--;
+        if(spins<=0){
+            clearInterval(interval);
+            checkWins(bet);
+            spinning=false;
+        }
+
+    },100);
+}
+
+function checkWins(bet){
+
+    let totalWin = 0;
+
+    // Revisar las 3 filas
+    for(let r=0;r<3;r++){
+
+        let first = grid[r][0].innerText;
+        let count = 1;
+
+        for(let c=1;c<5;c++){
+            if(grid[r][c].innerText === first){
+                count++;
+            } else {
+                break;
+            }
+        }
+
+        if(count >= 3){
+            let win = bet * payouts[first] * count;
+            totalWin += win;
+        }
+    }
+
+    if(totalWin > 0){
+        balance += totalWin;
+        document.getElementById("result").innerText="🔥 Ganaste " + totalWin;
+    } else {
+        document.getElementById("result").innerText="Nada... 🥀";
+    }
+
+    document.getElementById("balance").innerText="Saldo: "+balance;
+}
+
+createGrid();
+
+</script>
+
+</body>
+</html>
+
+
