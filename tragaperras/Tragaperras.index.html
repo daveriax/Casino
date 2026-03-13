@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Tragaperras 5x5</title>
+
+<style>
+
+body{
+background:#111;
+color:white;
+font-family:Arial;
+text-align:center;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(5,70px);
+gap:10px;
+justify-content:center;
+margin:20px;
+}
+
+.slot{
+font-size:40px;
+background:#222;
+padding:10px;
+border-radius:10px;
+}
+
+button{
+padding:10px 20px;
+font-size:18px;
+cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>🎰 Tragaperras 5x5</h1>
+
+<h2>💰 Dinero: <span id="balance">1000</span>$</h2>
+
+<div>
+Apuesta: <input id="bet" type="number" value="100">
+<button onclick="tirar()">Girar</button>
+</div>
+
+<h2 id="ganancia"></h2>
+
+<div id="grid" class="grid"></div>
+
+<script>
+
+let balance = 1000
+let tiradas = 0
+
+let simbolos=["🍒","🍋","🍉","⭐","💎","7️⃣","🩴"]
+
+let multiplicador={
+"🍒":1.5,
+"🍋":2,
+"🍉":2.5,
+"⭐":3,
+"💎":3.5,
+"7️⃣":4,
+"🩴":5
+}
+
+let probSimbolo={
+"🍒":30,
+"🍋":15,
+"🍉":12,
+"⭐":10,
+"💎":5,
+"7️⃣":3,
+"🩴":1
+}
+
+let probLinea={
+3:15,
+4:10,
+5:5,
+jackpot:2
+}
+
+function elegirSimbolo(){
+
+let total=0
+
+for(let s in probSimbolo){
+total+=probSimbolo[s]
+}
+
+let r=Math.random()*total
+
+let acumulado=0
+
+for(let s in probSimbolo){
+acumulado+=probSimbolo[s]
+if(r<=acumulado) return s
+}
+
+}
+
+function generarGrid(){
+
+let grid=[]
+
+for(let i=0;i<5;i++){
+
+let fila=[]
+
+for(let j=0;j<5;j++){
+fila.push(elegirSimbolo())
+}
+
+grid.push(fila)
+
+}
+
+return grid
+
+}
+
+function mostrarGrid(grid){
+
+let cont=document.getElementById("grid")
+cont.innerHTML=""
+
+for(let fila of grid){
+for(let s of fila){
+
+let div=document.createElement("div")
+div.className="slot"
+div.textContent=s
+
+cont.appendChild(div)
+
+}
+}
+
+}
+
+function calcularGanancias(grid, apuesta){
+
+let total=0
+let lineas=[]
+
+// horizontales
+for(let i=0;i<5;i++) lineas.push(grid[i])
+
+// verticales
+for(let j=0;j<5;j++){
+
+let col=[]
+
+for(let i=0;i<5;i++) col.push(grid[i][j])
+
+lineas.push(col)
+
+}
+
+// diagonales
+
+lineas.push([
+grid[0][0],
+grid[1][1],
+grid[2][2],
+grid[3][3],
+grid[4][4]
+])
+
+lineas.push([
+grid[0][4],
+grid[1][3],
+grid[2][2],
+grid[3][1],
+grid[4][0]
+])
+
+let jackpot=true
+
+for(let linea of lineas){
+
+let simbolo=linea[0]
+let count=1
+
+for(let i=1;i<5;i++){
+
+if(linea[i]==simbolo) count++
+else break
+
+}
+
+if(count>=3){
+
+if(Math.random()*100 <= probLinea[count]){
+
+let dinero=(apuesta * multiplicador[simbolo]) * count
+
+total+=dinero
+
+}
+
+}
+
+if(count!=5) jackpot=false
+
+}
+
+if(jackpot){
+
+if(Math.random()*100 <= probLinea.jackpot){
+
+let simbolo=grid[0][0]
+
+total=(apuesta * multiplicador[simbolo]) * 5 * 12
+
+}
+
+}
+
+return total
+
+}
+
+function aumentarProbabilidades(){
+
+if(tiradas%10==0){
+
+for(let s in probSimbolo) probSimbolo[s]+=1
+
+probLinea[3]+=1
+probLinea[4]+=1
+probLinea[5]+=1
+probLinea.jackpot+=1
+
+}
+
+}
+
+function tirar(){
+
+let apuesta=parseFloat(document.getElementById("bet").value)
+
+if(apuesta>balance){
+alert("No tienes suficiente dinero")
+return
+}
+
+balance -= apuesta
+
+tiradas++
+
+aumentarProbabilidades()
+
+let grid=generarGrid()
+
+mostrarGrid(grid)
+
+let ganado=calcularGanancias(grid,apuesta)
+
+balance += ganado
+
+document.getElementById("ganancia").innerText="Ganaste: "+ganado+"$"
+
+document.getElementById("balance").innerText=balance
+
+}
+
+</script>
+
+</body>
+</html>
+
